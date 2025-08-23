@@ -1,13 +1,14 @@
-package com.zeynalabidin.starter;
+package com.zeynalabidin;
+
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BlogApplicationStarter {
+public class BlogApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BlogApplicationStarter.class, args);
+		SpringApplication.run(BlogApplication.class, args);
 	}
 
 }
