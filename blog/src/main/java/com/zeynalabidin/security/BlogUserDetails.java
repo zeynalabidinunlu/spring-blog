@@ -11,6 +11,7 @@ import com.zeynalabidin.domain.entities.User;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
@@ -52,4 +53,8 @@ public class BlogUserDetails implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+	public UUID getId() {
+		return user.getId();
+	}
 }

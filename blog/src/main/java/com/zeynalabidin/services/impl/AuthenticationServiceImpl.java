@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.zeynalabidin.services.AuthenticationService;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -42,17 +43,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Override
 	public String generateToken(UserDetails userDetails) {
 		Map<String, Object> claims = new HashMap<>();
-	return	Jwts.builder().setClaims(claims).
-		setSubject(userDetails.getUsername()).
-		setIssuedAt(new Date(System.currentTimeMillis())).
-		setExpiration(new Date(System.currentTimeMillis()+jwtExpireMsLong)).
-		signWith(getSingingKey(),SignatureAlgorithm.HS256).
-		compact();
+		return Jwts.builder().setClaims(claims).setSubject(userDetails.getUsername())
+				.setIssuedAt(new Date(System.currentTimeMillis()))
+				.setExpiration(new Date(System.currentTimeMillis() + jwtExpireMsLong))
+				.signWith(getSingingKey(), SignatureAlgorithm.HS256).compact();
 	}
 
-	
 	private Key getSingingKey() {
 		byte[] keyBytes = secretKey.getBytes();
-	return Keys.hmacShaKeyFor(keyBytes);
+		return Keys.hmacShaKeyFor(keyBytes);
+	}
+
+	private String extractUserName(String token) {
+		Claims claims = Jwts.parserBuilder().setSigningKey(getSingingKey()).build().parseClaimsJws(token).getBody();
+
+		return claims.getSubject();
+	}
+
+	@Override
+	public UserDetails validateToken(String token) {
+		String username= extractUserName(token);
+		return userDetailsService.loadUserByUsername(username);
 	}
 }
