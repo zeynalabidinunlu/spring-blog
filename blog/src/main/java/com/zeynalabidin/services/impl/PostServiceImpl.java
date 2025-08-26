@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.zeynalabidin.domain.CreatePostRequest;
 import com.zeynalabidin.domain.PostStatus;
+import com.zeynalabidin.domain.UpdatePostRequest;
 import com.zeynalabidin.domain.entities.Category;
 import com.zeynalabidin.domain.entities.Post;
 import com.zeynalabidin.domain.entities.Tag;
@@ -15,10 +16,13 @@ import com.zeynalabidin.services.CategoryService;
 import com.zeynalabidin.services.PostService;
 import com.zeynalabidin.services.TagService;
 
+import jakarta.persistence.EntityNotFoundException;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -67,14 +71,14 @@ public class PostServiceImpl implements PostService {
 		newPost.setStatus(createPostRequest.getStatus());
 		newPost.setAuthor(user);
 		newPost.setReadingTime(calculateReadingTime(createPostRequest.getContent()));
-	
+
 		Category category = categoryService.getCategoryById(createPostRequest.getCategoryId());
 		newPost.setCategory(category);
-		
+
 		Set<UUID> tagIds = createPostRequest.getTagIds();
 		List<Tag> tags = tagService.getTagByIds(tagIds);
 		newPost.setTags(new HashSet<>(tags));
-	
+
 		return postRepository.save(newPost);
 	}
 
@@ -85,5 +89,30 @@ public class PostServiceImpl implements PostService {
 
 		int wordCount = content.trim().split("\\s+").length;
 		return (int) Math.ceil((double) wordCount / WORDS_PER_MINUTE);
+	}
+
+	@Override
+	@Transactional
+	public Post updatePost(UUID id, UpdatePostRequest updatePostRequest) {
+		Post existingPosts = postRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Post does not exist with id" + id));
+		String postContent = updatePostRequest.getContent();
+		existingPosts.setTitle(updatePostRequest.getTitle());
+		existingPosts.setContent(updatePostRequest.getContent());
+		existingPosts.setStatus(updatePostRequest.getStatus());
+		existingPosts.setReadingTime(calculateReadingTime(postContent));
+
+		UUID updatePostRequestCategoryId = updatePostRequest.getCategoryId();
+		if (!existingPosts.getCategory().getId().equals(updatePostRequestCategoryId)) {
+			Category newCategory = categoryService.getCategoryById(updatePostRequestCategoryId);
+			existingPosts.setCategory(newCategory);
+		}
+
+		Set<UUID> existingsTagIds = existingPosts.getTags().stream().map(Tag::getId).collect(Collectors.toSet());
+		if (!existingsTagIds.equals(updatePostRequestCategoryId)) {
+			List<Tag> newTags = tagService.getTagByIds(existingsTagIds);
+			existingPosts.setTags(new HashSet<>(newTags));
+		}
+		return postRepository.save(existingPosts);
 	}
 }
