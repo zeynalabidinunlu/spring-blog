@@ -9,6 +9,7 @@ import com.zeynalabidin.domain.PostStatus;
 import com.zeynalabidin.domain.entities.Category;
 import com.zeynalabidin.domain.entities.Post;
 import com.zeynalabidin.domain.entities.Tag;
+import com.zeynalabidin.domain.entities.User;
 import com.zeynalabidin.repositories.PostRepository;
 import com.zeynalabidin.services.CategoryService;
 import com.zeynalabidin.services.PostService;
@@ -56,4 +57,9 @@ public class PostServiceImpl implements PostService {
 
         return postRepository.findAllByStatus(PostStatus.PUBLISHED);
     }
+
+	@Override
+	public List<Post> getDraftPosts(User user) {
+	return	postRepository.findAllByAuthorAndStatus(user, PostStatus.DRAFT);
+	}
 }
